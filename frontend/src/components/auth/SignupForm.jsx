@@ -19,7 +19,7 @@ function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -32,28 +32,57 @@ function SignupForm() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? checked : value,
-    });
+    }));
   };
 
-  const getStrength = () => {
-    const password = form.password;
+  // ----------------------------
+  // Password Strength Checker
+  // ----------------------------
+
+  const getStrength = (password) => {
+    if (!password) {
+      return {
+        text: "Enter Password",
+        color: "bg-gray-300",
+        width: "0%",
+      };
+    }
 
     let score = 0;
 
     if (password.length >= 8) score++;
+    if (/[a-z]/.test(password)) score++;
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    if (score <= 1) return { text: "Weak", color: "bg-red-500" };
-    if (score === 2) return { text: "Medium", color: "bg-yellow-500" };
-    if (score >= 3) return { text: "Strong", color: "bg-green-500" };
+    if (score <= 2) {
+      return {
+        text: "Weak",
+        color: "bg-red-500",
+        width: "33%",
+      };
+    }
+
+    if (score <= 4) {
+      return {
+        text: "Medium",
+        color: "bg-yellow-500",
+        width: "66%",
+      };
+    }
+
+    return {
+      text: "Strong",
+      color: "bg-green-500",
+      width: "100%",
+    };
   };
 
-  const strength = getStrength();
+  const strength = getStrength(form.password);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -74,7 +103,7 @@ function SignupForm() {
     }
 
     if (!form.terms) {
-      alert("Accept Terms & Conditions.");
+      alert("Please accept the Terms & Conditions.");
       return;
     }
 
@@ -93,7 +122,10 @@ function SignupForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
 
+      {/* Full Name */}
+
       <div className="relative">
+
         <User
           className="absolute left-4 top-11 text-gray-400"
           size={18}
@@ -107,9 +139,13 @@ function SignupForm() {
           value={form.name}
           onChange={handleChange}
         />
+
       </div>
 
+      {/* Email */}
+
       <div className="relative">
+
         <Mail
           className="absolute left-4 top-11 text-gray-400"
           size={18}
@@ -117,16 +153,20 @@ function SignupForm() {
 
         <Input
           label="Email"
-          name="email"
           type="email"
+          name="email"
           placeholder="example@gmail.com"
           className="pl-12"
           value={form.email}
           onChange={handleChange}
         />
+
       </div>
 
+      {/* Password */}
+
       <div className="relative">
+
         <Lock
           className="absolute left-4 top-11 text-gray-400"
           size={18}
@@ -143,14 +183,18 @@ function SignupForm() {
 
         <button
           type="button"
-          onClick={() => setShowPassword(!showPassword)}
           className="absolute right-4 top-11"
+          onClick={() => setShowPassword(!showPassword)}
         >
           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
+
       </div>
 
+      {/* Confirm Password */}
+
       <div className="relative">
+
         <Lock
           className="absolute left-4 top-11 text-gray-400"
           size={18}
@@ -167,37 +211,47 @@ function SignupForm() {
 
         <button
           type="button"
-          onClick={() => setShowConfirm(!showConfirm)}
           className="absolute right-4 top-11"
+          onClick={() => setShowConfirm(!showConfirm)}
         >
           {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
+
       </div>
+
+      {/* Password Strength */}
 
       <div>
-        <p className="text-sm mb-2">
-          Password Strength:
-          <span className="font-semibold ml-2">
+
+        <div className="flex justify-between mb-2">
+
+          <span className="text-sm font-medium">
+            Password Strength
+          </span>
+
+          <span className="text-sm font-semibold">
             {strength.text}
           </span>
-        </p>
 
-        <div className="h-2 rounded-full bg-gray-200">
+        </div>
+
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+
           <div
-            className={`${strength.color} h-2 rounded-full transition-all`}
+            className={`${strength.color} h-full transition-all duration-500`}
             style={{
-              width:
-                strength.text === "Weak"
-                  ? "33%"
-                  : strength.text === "Medium"
-                  ? "66%"
-                  : "100%",
+              width: strength.width,
             }}
           />
+
         </div>
+
       </div>
 
+      {/* Terms */}
+
       <label className="flex items-center gap-2 text-sm">
+
         <input
           type="checkbox"
           name="terms"
@@ -205,22 +259,32 @@ function SignupForm() {
           onChange={handleChange}
         />
 
-        I accept Terms & Conditions
+        I accept the Terms & Conditions
+
       </label>
 
-      <Button type="submit" className="w-full">
+      {/* Button */}
+
+      <Button
+        type="submit"
+        className="w-full"
+      >
         {loading ? "Creating Account..." : "Create Account"}
       </Button>
 
       <p className="text-center text-sm">
+
         Already have an account?
+
         <Link
           to="/login"
           className="ml-2 text-blue-600 font-semibold"
         >
           Login
         </Link>
+
       </p>
+
     </form>
   );
 }
