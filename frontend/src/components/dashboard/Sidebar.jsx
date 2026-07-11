@@ -1,4 +1,14 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import {
+  FaHome,
+  FaUpload,
+  FaBrain,
+  FaHistory,
+  FaChartBar,
+  FaUser,
+  FaSignOutAlt,
+} from "react-icons/fa";
+
 import useAuth from "../../hooks/useAuth";
 
 function Sidebar() {
@@ -11,47 +21,62 @@ function Sidebar() {
   };
 
   const linkClass = ({ isActive }) =>
-    `block px-4 py-3 rounded-lg transition ${
+    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
       isActive
-        ? "bg-blue-600 text-white"
+        ? "bg-blue-600 text-white shadow-lg"
         : "text-gray-700 hover:bg-blue-100"
     }`;
 
   return (
-    <aside className="w-64 bg-white shadow-lg min-h-screen p-6">
+    <aside className="w-72 min-h-screen bg-white shadow-xl p-6 flex flex-col justify-between flex-shrink-0">
 
-      <h1 className="text-3xl font-bold text-blue-600 mb-10">
-        ExamAI
-      </h1>
+      <div>
 
-      <nav className="space-y-2">
+        <h1 className="text-3xl font-extrabold text-blue-600 mb-10">
+          ExamAI
+        </h1>
 
-        <NavLink to="/dashboard" className={linkClass}>
-          Dashboard
-        </NavLink>
+        <nav className="space-y-3">
 
-        <NavLink to="/upload" className={linkClass}>
-          Upload Notes
-        </NavLink>
+          <NavLink to="/dashboard" className={linkClass}>
+            <FaHome />
+            Dashboard
+          </NavLink>
 
-        <NavLink to="/generate" className={linkClass}>
-          Generate Questions
-        </NavLink>
+          <NavLink to="/upload" className={linkClass}>
+            <FaUpload />
+            Upload Notes
+          </NavLink>
 
-        <NavLink to="/history" className={linkClass}>
-          History
-        </NavLink>
+          <NavLink to="/generate" className={linkClass}>
+            <FaBrain />
+            Generate Questions
+          </NavLink>
 
-        <NavLink to="/profile" className={linkClass}>
-          Profile
-        </NavLink>
+          <NavLink to="/history" className={linkClass}>
+            <FaHistory />
+            History
+          </NavLink>
 
-      </nav>
+          <NavLink to="/analytics" className={linkClass}>
+            <FaChartBar />
+            Analytics
+          </NavLink>
+
+          <NavLink to="/profile" className={linkClass}>
+            <FaUser />
+            Profile
+          </NavLink>
+
+        </nav>
+
+      </div>
 
       <button
         onClick={handleLogout}
-        className="mt-10 w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
+        className="bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl transition-all flex items-center justify-center gap-3 font-semibold"
       >
+        <FaSignOutAlt />
         Logout
       </button>
 
