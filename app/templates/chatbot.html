@@ -20,11 +20,13 @@
 .user{
     text-align:right;
     color:blue;
+    margin:5px;
 }
 
 .bot{
     text-align:left;
     color:green;
+    margin:5px;
 }
 
 </style>
@@ -37,7 +39,7 @@
 
 <div class="chat-box mb-3" id="chatBox"></div>
 
-<input type="text" id="message" class="form-control mb-2" placeholder="Ask something...">
+<input type="text" id="message" class="form-control mb-2" placeholder="Ask something..." onkeypress="handleEnter(event)">
 
 <button onclick="sendMessage()" class="btn btn-primary">Send</button>
 
@@ -45,23 +47,40 @@
 
 function sendMessage(){
 
-    let msg = document.getElementById("message").value;
+    let msg = document.getElementById("message").value.trim();
+
+    if(msg === "") return;
 
     let chatBox = document.getElementById("chatBox");
 
+    // Show user message
     chatBox.innerHTML += `<div class="user">${msg}</div>`;
 
-    fetch("/ask",{
+    // Auto scroll
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    fetch("/chat",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({message:msg})
     })
     .then(res=>res.json())
     .then(data=>{
-        chatBox.innerHTML += `<div class="bot">${data.reply}</div>`;
+        chatBox.innerHTML += `<div class="bot">${data.reply || data.error}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(err=>{
+        chatBox.innerHTML += `<div class="bot">Error: ${err}</div>`;
     });
 
     document.getElementById("message").value="";
+}
+
+// Enter key support
+function handleEnter(event){
+    if(event.key === "Enter"){
+        sendMessage();
+    }
 }
 
 </script>

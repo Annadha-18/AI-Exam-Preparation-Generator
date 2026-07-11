@@ -2,12 +2,11 @@ from flask import Flask, render_template
 from config import Config
 from app.extensions import db, login_manager, migrate
 
-# ✅ ADD THIS IMPORT
+# ✅ Import chatbot blueprint
 from app.routes.chatbot import chatbot_bp
 
 
 def create_app():
-
     app = Flask(__name__)
 
     # ==========================================
@@ -23,7 +22,7 @@ def create_app():
     login_manager.init_app(app)
 
     # ==========================================
-    # Import Models
+    # Import Models (important for migrations)
     # ==========================================
     from app import models
 
@@ -62,7 +61,14 @@ def create_app():
     app.register_blueprint(recommendation_bp)
     app.register_blueprint(pdf_bp)
 
-    # ✅ ADD THIS LINE (VERY IMPORTANT)
+    # ✅ CHATBOT (make sure it's LAST or after core routes)
     app.register_blueprint(chatbot_bp)
+
+    # ==========================================
+    # Optional: Debug route to test chatbot quickly
+    # ==========================================
+    @app.route("/test-chat")
+    def test_chat():
+        return "Chatbot route is working!"
 
     return app
