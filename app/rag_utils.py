@@ -4,10 +4,12 @@ from sentence_transformers import SentenceTransformer
 import os
 import pickle
 
+# Load model once
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+
 # --------------------------------------
-# Split text into chunks
+# ✂️ Split text into chunks
 # --------------------------------------
 def split_text(text, chunk_size=300):
     words = text.split()
@@ -21,18 +23,19 @@ def split_text(text, chunk_size=300):
 
 
 # --------------------------------------
-# Create embeddings + FAISS index
+# 🧠 Create embeddings + FAISS index
 # --------------------------------------
 def create_index(chunks, user_id):
     embeddings = model.encode(chunks)
 
     dimension = embeddings.shape[1]
     index = faiss.IndexFlatL2(dimension)
+
     index.add(np.array(embeddings))
 
     os.makedirs("app/index_data", exist_ok=True)
 
-    # Save index
+    # Save FAISS index
     faiss.write_index(index, f"app/index_data/{user_id}.index")
 
     # Save chunks
@@ -41,21 +44,53 @@ def create_index(chunks, user_id):
 
 
 # --------------------------------------
-# Search relevant chunks
+# 🔍 Search relevant chunks (🔥 IMPROVED)
 # --------------------------------------
 def search_chunks(query, user_id, top_k=3):
     try:
-        index = faiss.read_index(f"app/index_data/{user_id}.index")
+        # ----------------------------------
+        # 🔥 STEP 1: Improve query (IMPORTANT)
+        # ----------------------------------
+        query = query.lower()
 
-        with open(f"app/index_data/{user_id}_chunks.pkl", "rb") as f:
+        # If short query (like heading)
+        if len(query.split()) <= 5:
+            query = query + " definition explanation concept"
+
+        # ----------------------------------
+        # 📂 Load index + chunks
+        # ----------------------------------
+        index_path = f"app/index_data/{user_id}.index"
+        chunks_path = f"app/index_data/{user_id}_chunks.pkl"
+
+        if not os.path.exists(index_path) or not os.path.exists(chunks_path):
+            return ""
+
+        index = faiss.read_index(index_path)
+
+        with open(chunks_path, "rb") as f:
             chunks = pickle.load(f)
 
+        # ----------------------------------
+        # 🧠 Encode query
+        # ----------------------------------
         query_embedding = model.encode([query])
+
+        # ----------------------------------
+        # 🔍 Search FAISS
+        # ----------------------------------
         distances, indices = index.search(np.array(query_embedding), top_k)
 
-        results = [chunks[i] for i in indices[0] if i < len(chunks)]
+        # ----------------------------------
+        # 📚 Collect results
+        # ----------------------------------
+        results = []
+        for i in indices[0]:
+            if i < len(chunks):
+                results.append(chunks[i])
 
         return "\n\n".join(results)
 
-    except:
+    except Exception as e:
+        print("❌ SEARCH ERROR:", str(e))
         return ""

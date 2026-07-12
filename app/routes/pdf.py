@@ -1,5 +1,6 @@
 from io import BytesIO
 import os
+import re
 
 from flask import Blueprint, send_file, request, jsonify
 from flask_login import login_required, current_user
@@ -13,7 +14,7 @@ from PyPDF2 import PdfReader
 from config import Config
 from app.models import StudyMaterial, QuizResult
 
-# ✅ NEW (RAG IMPORTS)
+# ✅ RAG IMPORTS
 from app.rag_utils import split_text, create_index
 
 
@@ -24,11 +25,23 @@ pdf_bp = Blueprint("pdf", __name__)
 # ==========================================================
 NOTES_FOLDER = "app/notes_data"
 
-# Fix Windows conflict
 if os.path.exists(NOTES_FOLDER) and not os.path.isdir(NOTES_FOLDER):
     os.remove(NOTES_FOLDER)
 
 os.makedirs(NOTES_FOLDER, exist_ok=True)
+
+
+# ==========================================================
+# 🧹 CLEAN TEXT (🔥 NEW - FIXES BROKEN PDF TEXT)
+# ==========================================================
+def clean_text(text):
+    # Fix broken letters (D A T A → DATA)
+    text = re.sub(r'(?<=\b[A-Z])\s+(?=[A-Z]\b)', '', text)
+
+    # Fix multiple spaces/newlines
+    text = re.sub(r'\s+', ' ', text)
+
+    return text.strip()
 
 
 # ==========================================================
@@ -42,13 +55,13 @@ def extract_text(pdf_path):
         try:
             text += page.extract_text() or ""
         except:
-            pass  # skip broken pages safely
+            pass
 
     return text
 
 
 # ==========================================================
-# 📥 Load notes (still useful fallback)
+# 📥 Load notes (fallback)
 # ==========================================================
 def load_user_notes(user_id):
     path = os.path.join(NOTES_FOLDER, f"{user_id}.txt")
@@ -61,7 +74,7 @@ def load_user_notes(user_id):
 
 
 # ==========================================================
-# 🚀 Upload PDF + Save Notes + CREATE VECTOR INDEX 🔥
+# 🚀 Upload PDF + Clean + RAG Index
 # ==========================================================
 @pdf_bp.route("/upload-pdf", methods=["POST"])
 @login_required
@@ -69,7 +82,7 @@ def upload_pdf():
 
     try:
         # ----------------------------------
-        # ✅ Check file
+        # ✅ Validate file
         # ----------------------------------
         if "pdf" not in request.files:
             return jsonify({"error": "No file part"}), 400
@@ -89,33 +102,38 @@ def upload_pdf():
         file.save(filepath)
 
         # ----------------------------------
-        # 📄 Extract text
+        # 📄 Extract RAW text
         # ----------------------------------
-        extracted_text = extract_text(filepath)
+        raw_text = extract_text(filepath)
 
-        if not extracted_text.strip():
+        if not raw_text.strip():
             return jsonify({"error": "Could not extract text"}), 400
 
         # ----------------------------------
-        # 💾 Save notes (for backup)
+        # 🧹 CLEAN TEXT (🔥 IMPORTANT)
+        # ----------------------------------
+        cleaned_text = clean_text(raw_text)
+
+        # ----------------------------------
+        # 💾 Save cleaned notes
         # ----------------------------------
         notes_file = os.path.join(NOTES_FOLDER, f"{current_user.id}.txt")
 
         with open(notes_file, "w", encoding="utf-8") as f:
-            f.write(extracted_text)
+            f.write(cleaned_text)
 
         # ----------------------------------
-        # 🧠 CREATE RAG INDEX (🔥 MAIN UPGRADE)
+        # 🧠 CREATE RAG INDEX
         # ----------------------------------
-        chunks = split_text(extracted_text)
+        chunks = split_text(cleaned_text)
         create_index(chunks, current_user.id)
 
         print(f"✅ RAG index created for user {current_user.id}")
 
         return jsonify({
-            "message": "PDF uploaded + AI index created successfully 🚀",
+            "message": "PDF uploaded + cleaned + AI index created 🚀",
             "chunks_created": len(chunks),
-            "preview": extracted_text[:300]
+            "preview": cleaned_text[:300]
         })
 
     except Exception as e:
@@ -148,12 +166,7 @@ def download_summary(note_id):
     doc.build(story)
     buffer.seek(0)
 
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name="Summary.pdf",
-        mimetype="application/pdf"
-    )
+    return send_file(buffer, as_attachment=True, download_name="Summary.pdf", mimetype="application/pdf")
 
 
 # ==========================================================
@@ -182,7 +195,6 @@ def download_result(result_id):
     story.append(Paragraph(f"<b>Percentage:</b> {result.percentage}%", styles["BodyText"]))
     story.append(Paragraph(f"<b>Attempt Date:</b> {result.attempted_on.strftime('%d-%m-%Y %H:%M')}", styles["BodyText"]))
 
-    # AI Feedback
     if result.percentage >= 80:
         feedback = "Excellent performance! Keep it up."
     elif result.percentage >= 50:
@@ -196,12 +208,7 @@ def download_result(result_id):
     doc.build(story)
     buffer.seek(0)
 
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name="Quiz_Result.pdf",
-        mimetype="application/pdf"
-    )
+    return send_file(buffer, as_attachment=True, download_name="Quiz_Result.pdf", mimetype="application/pdf")
 
 
 # ==========================================================
@@ -229,9 +236,4 @@ def download_recommendation(note_id):
     doc.build(story)
     buffer.seek(0)
 
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name="Study_Recommendation.pdf",
-        mimetype="application/pdf"
-    )
+    return send_file(buffer, as_attachment=True, download_name="Study_Recommendation.pdf", mimetype="application/pdf")
