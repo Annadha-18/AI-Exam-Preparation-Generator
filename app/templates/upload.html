@@ -1,44 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Upload Study Material</title>
+
+    <!-- Bootstrap -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <style>
+
+        body{
+            background:#f5f7fa;
+        }
+
+        .upload-card{
+            max-width:700px;
+            margin:auto;
+            margin-top:50px;
+            border:none;
+            border-radius:15px;
+            box-shadow:0 5px 20px rgba(0,0,0,.1);
+        }
+
+    </style>
+
 </head>
 
 <body>
 
-    <h2>Upload Study Material</h2>
+{% include "navbar.html" %}
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <p style="color:green;">
-                    {{ message }}
-                </p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+<div class="container">
 
-    <form method="POST" enctype="multipart/form-data">
+<div class="card upload-card">
 
-        <input
-            type="file"
-            name="file"
-            required>
+<div class="card-body p-5">
 
-        <br><br>
+<h2 class="text-center mb-4">
 
-        <button type="submit">
-            Upload File
-        </button>
+📤 Upload Study Material
 
-    </form>
+</h2>
 
-    <br>
+<!-- Flash Messages -->
 
-    <a href="{{ url_for('dashboard.dashboard') }}">
-        Back to Dashboard
-    </a>
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+{% if messages %}
+
+{% for category,message in messages %}
+
+<div class="alert alert-{% if category=='success' %}success{% else %}warning{% endif %}">
+
+{{ message }}
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+{% endwith %}
+
+<form method="POST"
+      enctype="multipart/form-data">
+
+<div class="mb-4">
+
+<label class="form-label">
+
+Choose a File
+
+</label>
+
+<input
+
+class="form-control"
+
+type="file"
+
+name="file"
+
+accept=".pdf,.doc,.docx,.txt"
+
+required>
+
+<div class="form-text">
+
+Allowed file types:
+
+<strong>PDF, DOCX, TXT</strong>
+
+Maximum size:
+
+<strong>20 MB</strong>
+
+</div>
+
+</div>
+
+<div class="d-grid">
+
+<button
+
+type="submit"
+
+class="btn btn-primary btn-lg">
+
+📤 Upload File
+
+</button>
+
+</div>
+
+</form>
+
+<hr>
+
+<div class="text-center mt-4">
+
+<a href="{{ url_for('notes.my_notes') }}"
+   class="btn btn-success">
+
+📚 View Uploaded Notes
+
+</a>
+
+<a href="{{ url_for('dashboard.dashboard') }}"
+   class="btn btn-secondary">
+
+🏠 Dashboard
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 </body>
 

@@ -1,178 +1,250 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-<html>
-
-<head>
-    <title>My Notes</title>
-=======
 <html lang="en">
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Notes</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>My Notes</title>
 
-<style>
-body{
-    background:#f5f7fa;
-}
-.card{
-    border:none;
-    border-radius:12px;
-    box-shadow:0px 4px 15px rgba(0,0,0,.08);
-    transition:0.3s;
-}
-.card:hover{
-    transform:translateY(-5px);
-}
-.preview-box{
-    background:#f8f9fa;
-    padding:10px;
-    border-radius:8px;
-    font-size:14px;
-}
-</style>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
->>>>>>> master
+    <style>
+
+        body{
+            background:#f5f7fa;
+        }
+
+        .card{
+            border:none;
+            border-radius:12px;
+            box-shadow:0 4px 15px rgba(0,0,0,.08);
+            transition:.3s;
+        }
+
+        .card:hover{
+            transform:translateY(-5px);
+        }
+
+        .preview-box{
+            background:#f8f9fa;
+            border-radius:8px;
+            padding:12px;
+            max-height:180px;
+            overflow:auto;
+            white-space:pre-wrap;
+        }
+
+    </style>
+
 </head>
 
 <body>
 
-<<<<<<< HEAD
-    <h2>📚 My Uploaded Notes</h2>
-
-    {% if notes %}
-
-        {% for note in notes %}
-
-            <hr>
-
-            <h3>{{ note.original_filename }}</h3>
-
-            <p>
-                {{ note.extracted_text[:500] }}
-            </p>
-
-        {% endfor %}
-
-    {% else %}
-
-        <p>No notes uploaded yet.</p>
-
-    {% endif %}
-
-    <br>
-
-    <a href="{{ url_for('dashboard.dashboard') }}">
-        Back to Dashboard
-    </a>
-
-</body>
-
-=======
 {% include "navbar.html" %}
 
 <div class="container mt-4">
 
-<h3 class="mb-4">📚 My Uploaded Notes</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
-<!-- ✅ UPDATED SEARCH BAR -->
-<form method="GET" class="mb-4 d-flex">
+        <h2>📚 My Uploaded Notes</h2>
 
-    <input 
-        type="text" 
-        name="q" 
-        class="form-control me-2" 
-        placeholder="Search notes..." 
-        value="{{ search_query or '' }}"
-    >
+        <a href="{{ url_for('upload.upload') }}"
+           class="btn btn-primary">
+            📤 Upload Notes
+        </a>
 
-    <button type="submit" class="btn btn-primary">
-        🔍 Search
-    </button>
+    </div>
 
-</form>
+    <!-- Search -->
 
-{% if notes %}
+    <form method="GET"
+          action="{{ url_for('notes.my_notes') }}"
+          class="mb-4">
 
-<div class="row">
+        <div class="input-group">
 
-{% for note in notes %}
+            <input
+                type="text"
+                class="form-control"
+                placeholder="Search notes..."
+                name="q"
+                value="{{ search_query or '' }}">
 
-<div class="col-md-6 mb-4">
+            <button class="btn btn-primary">
+                🔍 Search
+            </button>
 
-<div class="card p-3">
+        </div>
 
-<h5>📄 {{ note.original_filename }}</h5>
+    </form>
 
-<p class="mt-2"><strong>Preview:</strong></p>
+    {% if notes %}
 
-<div class="preview-box">
-    {{ note.extracted_text[:200] }}...
-</div>
+    <div class="row">
 
-<hr>
+        {% for note in notes %}
 
-<h6>📖 Summary</h6>
+        <div class="col-lg-6 mb-4">
 
-{% if note.summary_generated %}
-<a href="{{ url_for('summary.view_summary', note_id=note.id) }}" class="btn btn-success btn-sm">View Summary</a>
-{% else %}
-<a href="{{ url_for('summary.generate_summary', note_id=note.id) }}" class="btn btn-primary btn-sm">Generate Summary</a>
-{% endif %}
+            <div class="card">
 
-<br><br>
+                <div class="card-body">
 
-<h6>📝 Quiz</h6>
+                    <h5 class="card-title">
 
-{% if note.quiz_generated %}
-<a href="{{ url_for('quiz.view_quiz', note_id=note.id) }}" class="btn btn-info btn-sm">View Quiz</a>
-<a href="{{ url_for('exam.attempt_quiz', note_id=note.id) }}" class="btn btn-warning btn-sm">Attempt Quiz</a>
-{% else %}
-<a href="{{ url_for('quiz.generate_quiz', note_id=note.id) }}" class="btn btn-dark btn-sm">Generate Quiz</a>
-{% endif %}
+                        📄 {{ note.original_filename }}
 
-<br><br>
+                    </h5>
 
-<h6>📊 Results</h6>
-<a href="{{ url_for('result.results') }}" class="btn btn-secondary btn-sm">View Results</a>
+                    <p class="text-muted">
 
-<br><br>
+                        Type :
+                        {{ note.file_type|upper }}
 
-<h6>🤖 Recommendation</h6>
+                    </p>
 
-{% if note.recommendation_generated %}
-<a href="{{ url_for('recommendation.view_recommendation', note_id=note.id) }}" class="btn btn-success btn-sm">View Recommendation</a>
-{% else %}
-<a href="{{ url_for('recommendation.generate_recommendation', note_id=note.id) }}" class="btn btn-primary btn-sm">Generate Recommendation</a>
-{% endif %}
+                    <p class="text-muted">
 
-<br><br>
+                        Uploaded :
+                        {{ note.upload_date }}
 
-<a href="{{ url_for('notes.delete_note', id=note.id) }}" class="btn btn-danger btn-sm">Delete</a>
+                    </p>
 
-</div>
+                    <hr>
 
-</div>
+                    <h6>Preview</h6>
 
-{% endfor %}
+                    <div class="preview-box">
 
-</div>
+                        {{ note.extracted_text[:300] if note.extracted_text else "No extracted text available." }}
 
-{% else %}
+                    </div>
 
-<div class="alert alert-warning">
-No study materials uploaded yet.
-</div>
+                    <hr>
 
-{% endif %}
+                    <div class="d-flex flex-wrap gap-2">
+
+                        {% if note.summary_generated %}
+
+                        <a href="{{ url_for('summary.view_summary', note_id=note.id) }}"
+                           class="btn btn-success btn-sm">
+
+                            View Summary
+
+                        </a>
+
+                        {% else %}
+
+                        <a href="{{ url_for('summary.generate_summary', note_id=note.id) }}"
+                           class="btn btn-primary btn-sm">
+
+                            Generate Summary
+
+                        </a>
+
+                        {% endif %}
+
+                        {% if note.quiz_generated %}
+
+                        <a href="{{ url_for('quiz.view_quiz', note_id=note.id) }}"
+                           class="btn btn-info btn-sm">
+
+                            View Quiz
+
+                        </a>
+
+                        <a href="{{ url_for('exam.attempt_quiz', note_id=note.id) }}"
+                           class="btn btn-warning btn-sm">
+
+                            Attempt Quiz
+
+                        </a>
+
+                        {% else %}
+
+                        <a href="{{ url_for('quiz.generate_quiz', note_id=note.id) }}"
+                           class="btn btn-dark btn-sm">
+
+                            Generate Quiz
+
+                        </a>
+
+                        {% endif %}
+
+                        {% if note.recommendation_generated %}
+
+                        <a href="{{ url_for('recommendation.view_recommendation', note_id=note.id) }}"
+                           class="btn btn-success btn-sm">
+
+                            Recommendation
+
+                        </a>
+
+                        {% else %}
+
+                        <a href="{{ url_for('recommendation.generate_recommendation', note_id=note.id) }}"
+                           class="btn btn-secondary btn-sm">
+
+                            Generate Recommendation
+
+                        </a>
+
+                        {% endif %}
+
+                        <a href="{{ url_for('result.results') }}"
+                           class="btn btn-outline-primary btn-sm">
+
+                            Results
+
+                        </a>
+
+                        <a href="{{ url_for('notes.delete_note', id=note.id) }}"
+                           class="btn btn-danger btn-sm">
+
+                            Delete
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="alert alert-info">
+
+        <h5>No study materials uploaded yet.</h5>
+
+        <p class="mb-3">
+
+            Upload your first PDF, DOCX or TXT file.
+
+        </p>
+
+        <a href="{{ url_for('upload.upload') }}"
+           class="btn btn-primary">
+
+            Upload Notes
+
+        </a>
+
+    </div>
+
+    {% endif %}
 
 </div>
 
 </body>
->>>>>>> master
+
 </html>

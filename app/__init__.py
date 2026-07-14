@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from config import Config
 from app.extensions import db, login_manager, migrate
 
-# ✅ Import chatbot blueprint
+# Import chatbot blueprint
 from app.routes.chatbot import chatbot_bp
 
 
@@ -15,7 +15,7 @@ def create_app():
     app.config.from_object(Config)
 
     # ==========================================
-    # 🔐 SECRET KEY
+    # Secret Key
     # ==========================================
     app.secret_key = app.config.get("SECRET_KEY", "supersecretkey123")
 
@@ -32,7 +32,7 @@ def create_app():
     from app import models
 
     # ==========================================
-    # 🏠 HOME ROUTE
+    # Home Route
     # ==========================================
     @app.route("/")
     def home():
@@ -45,15 +45,12 @@ def create_app():
     from app.routes.dashboard import dashboard_bp
     from app.routes.upload import upload_bp
     from app.routes.notes import notes_bp
-<<<<<<< HEAD
-=======
     from app.routes.summary import summary_bp
     from app.routes.quiz import quiz_bp
     from app.routes.exam import exam_bp
     from app.routes.result import result_bp
     from app.routes.recommendation import recommendation_bp
     from app.routes.pdf import pdf_bp
->>>>>>> master
 
     # ==========================================
     # Register Blueprints
@@ -62,8 +59,6 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(upload_bp)
     app.register_blueprint(notes_bp)
-<<<<<<< HEAD
-=======
     app.register_blueprint(summary_bp)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(exam_bp)
@@ -72,17 +67,15 @@ def create_app():
     app.register_blueprint(pdf_bp)
 
     # ==========================================
-    # 🤖 CHATBOT ROUTES
+    # Chatbot Routes
     # ==========================================
-    # 👉 FINAL ENDPOINT: /chatbot/chat
     app.register_blueprint(chatbot_bp, url_prefix="/chatbot")
 
     # ==========================================
-    # 🧪 DEBUG ROUTE
+    # Test Route
     # ==========================================
     @app.route("/test-chat")
     def test_chat():
         return "✅ Chatbot route is working!"
->>>>>>> master
 
     return app

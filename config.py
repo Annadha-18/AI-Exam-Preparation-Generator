@@ -10,67 +10,48 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-
-<<<<<<< HEAD
-    # Secret Key
-    SECRET_KEY = "exam_project_secret_key"
-
-    # Database
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(
-        BASE_DIR,
-        "instance",
-        "database.db"
-=======
     # ===================================
-    # 🔐 Flask Configuration
+    # Flask Configuration
     # ===================================
     SECRET_KEY = os.getenv("SECRET_KEY", "exam_project_secret_key")
 
     # ===================================
-    # 🗄️ Database Configuration
+    # Database Configuration
     # ===================================
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        "sqlite:///" + os.path.join(BASE_DIR, "instance", "database.db")
->>>>>>> master
+        "sqlite:///" + os.path.join(BASE_DIR, "instance", "database.db"),
     )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-<<<<<<< HEAD
+    # ===================================
     # Upload Configuration
+    # ===================================
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 
-    MAX_CONTENT_LENGTH = 20 * 1024 * 1024      # 20 MB
+    # Create upload folder if it doesn't exist
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+    # Maximum upload size (20 MB)
+    MAX_CONTENT_LENGTH = 20 * 1024 * 1024
+
+    # Allowed file types
     ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
-=======
-    # ===================================
-    # 📂 Upload Folder
-    # ===================================
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-
-    # Create folder if not exists
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
-
-    # Maximum Upload Size (16 MB)
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
     # ===================================
-    # 🤖 Groq AI Configuration
+    # Groq AI Configuration
     # ===================================
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     # ===================================
-    # 📄 PDF Processing (NEW)
+    # PDF Processing
     # ===================================
-    PDF_MAX_CHARS = 3000   # limit for AI input
+    PDF_MAX_CHARS = 3000
 
     # ===================================
-    # ⚙️ Session Configuration
+    # Session Configuration
     # ===================================
     SESSION_PERMANENT = False
     SESSION_TYPE = "filesystem"
->>>>>>> master

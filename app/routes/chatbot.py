@@ -5,136 +5,204 @@ import os
 
 from app.rag_utils import search_chunks
 
-# ==========================================
-# ✅ CREATE BLUEPRINT
-# ==========================================
+# =====================================================
+# Blueprint
+# =====================================================
+
 chatbot_bp = Blueprint("chatbot", __name__)
 
-# ==========================================
-# 🔑 API KEY
-# ==========================================
+# =====================================================
+# Environment Variables
+# =====================================================
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+MODEL_NAME = os.getenv(
+    "GROQ_MODEL",
+    "llama-3.3-70b-versatile"
+)
+
 if not GROQ_API_KEY:
-    raise ValueError("❌ GROQ_API_KEY is not set")
+    raise ValueError(
+        "GROQ_API_KEY is missing. Please add it in your .env file."
+    )
 
 client = Groq(api_key=GROQ_API_KEY)
 
-# ==========================================
-# 📁 NOTES FOLDER (fallback)
-# ==========================================
+# =====================================================
+# Notes Folder
+# =====================================================
+
 NOTES_FOLDER = "app/notes_data"
 os.makedirs(NOTES_FOLDER, exist_ok=True)
 
-# ==========================================
-# ✅ UI ROUTE (IMPORTANT - YOU WERE MISSING THIS)
-# ==========================================
+# =====================================================
+# Chatbot UI
+# =====================================================
+
 @chatbot_bp.route("/", methods=["GET"])
 @login_required
 def chatbot_page():
     return render_template("chatbot.html")
 
 
-# ==========================================
-# 🤖 CHAT ROUTE (RAG + FIXED PROMPT)
-# ==========================================
+# =====================================================
+# Chat API
+# =====================================================
+
 @chatbot_bp.route("/chat", methods=["POST"])
 @login_required
 def chat():
+
     try:
-        # ----------------------------------
-        # ✅ SAFE JSON
-        # ----------------------------------
+
+        # -----------------------------------------
+        # Read JSON
+        # -----------------------------------------
+
         data = request.get_json(silent=True)
 
         if not data:
-            return jsonify({"error": "Invalid JSON request"}), 400
+            return jsonify({
+                "error": "Invalid request."
+            }), 400
 
         user_message = data.get("message", "").strip()
 
-        if not user_message:
-            return jsonify({"error": "Message cannot be empty"}), 400
+        if user_message == "":
+            return jsonify({
+                "error": "Message cannot be empty."
+            }), 400
 
-        # ----------------------------------
-        # 🔥 FIX 1: HANDLE SHORT QUERIES (HEADINGS)
-        # ----------------------------------
+        # -----------------------------------------
+        # Improve short queries
+        # -----------------------------------------
+
         if len(user_message.split()) <= 5:
-            user_message = "Explain this topic clearly: " + user_message
+            user_message = (
+                "Explain this topic clearly: "
+                + user_message
+            )
 
-        # ----------------------------------
-        # 🧠 RAG SEARCH
-        # ----------------------------------
-        relevant_notes = search_chunks(user_message, current_user.id)
+        # -----------------------------------------
+        # Retrieve Notes using RAG
+        # -----------------------------------------
 
-        # ----------------------------------
-        # 📄 FALLBACK (if no embeddings)
-        # ----------------------------------
+        relevant_notes = search_chunks(
+            user_message,
+            current_user.id
+        )
+
+        # -----------------------------------------
+        # Fallback to stored text file
+        # -----------------------------------------
+
         if not relevant_notes:
-            print("⚠️ No RAG results, using fallback file")
 
-            notes_file = os.path.join(NOTES_FOLDER, f"{current_user.id}.txt")
+            print("Using fallback notes file...")
+
+            notes_file = os.path.join(
+                NOTES_FOLDER,
+                f"{current_user.id}.txt"
+            )
 
             if os.path.exists(notes_file):
-                with open(notes_file, "r", encoding="utf-8") as f:
-                    relevant_notes = f.read()[:2000]
+
+                with open(
+                    notes_file,
+                    "r",
+                    encoding="utf-8"
+                ) as file:
+
+                    relevant_notes = file.read()[:2500]
 
         if not relevant_notes:
             relevant_notes = "No relevant notes found."
 
-        # ----------------------------------
-        # 🔥 FIX 2: SMART PROMPT
-        # ----------------------------------
+        # -----------------------------------------
+        # Prompt
+        # -----------------------------------------
+
         messages = [
+
             {
                 "role": "system",
-                "content": (
-                    "You are a helpful AI exam assistant.\n\n"
-                    "Rules:\n"
-                    "- Answer using the provided notes.\n"
-                    "- Try even if partial information exists.\n"
-                    "- If question is a topic or heading, explain it clearly.\n"
-                    "- Do NOT require exact match.\n"
-                    "- Only say 'Not in notes' if nothing is relevant.\n"
-                    "- Keep answers simple and clear."
-                )
+
+                "content": """
+You are an AI Study Assistant.
+
+Rules:
+
+1. Answer using the provided notes.
+
+2. Explain concepts clearly.
+
+3. If only partial information exists, still help.
+
+4. Do not say 'Not in notes' unless nothing is relevant.
+
+5. Keep answers simple.
+
+6. Use bullet points whenever useful.
+
+7. Give exam-oriented answers.
+"""
             },
+
             {
                 "role": "user",
+
                 "content": f"""
-NOTES:
+NOTES
+
 {relevant_notes}
 
-QUESTION:
+
+QUESTION
+
 {user_message}
 """
             }
+
         ]
 
-        # ----------------------------------
-        # 🤖 GROQ CALL
-        # ----------------------------------
+        # -----------------------------------------
+        # Groq API
+        # -----------------------------------------
+
         response = client.chat.completions.create(
+
+            model=MODEL_NAME,
+
             messages=messages,
-            model="llama-3.1-8b-instant",
+
             temperature=0.4,
-            max_tokens=300
+
+            max_tokens=500
+
         )
 
-        reply = (
-            response.choices[0].message.content.strip()
-            if response and response.choices
-            else "No response"
-        )
+        reply = response.choices[0].message.content.strip()
 
-        # ----------------------------------
-        # 🧾 LOGGING
-        # ----------------------------------
-        print(f"👤 User ({current_user.id}): {user_message}")
-        print(f"📚 Retrieved Notes: {relevant_notes[:200]}...")
-        print(f"🤖 AI: {reply}")
+        # -----------------------------------------
+        # Logging
+        # -----------------------------------------
 
-        return jsonify({"reply": reply})
+        print("\n==============================")
+        print("User :", current_user.id)
+        print("Question :", user_message)
+        print("Model :", MODEL_NAME)
+        print("==============================\n")
+
+        return jsonify({
+            "reply": reply
+        })
 
     except Exception as e:
-        print("❌ ERROR (CHAT):", str(e))
-        return jsonify({"error": "Internal server error"}), 500
+
+        print("CHATBOT ERROR")
+        print(e)
+
+        return jsonify({
+            "error": str(e)
+        }), 500
